@@ -1,0 +1,61 @@
+name: Build NC Bank Map Book
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt
+
+      - name: Build detailed PDF map book
+        env:
+          OUTPUT_DIR: output
+        run: python tools/nc_bank_map.py
+
+      - name: Verify PDF
+        run: |
+          test -s output/AES_NC_Stores_Nearby_Banks_Detailed_Map.pdf
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('output/AES_NC_Stores_Nearby_Banks_Detailed_Map.pdf')
+          assert p.read_bytes()[:5] == b'%PDF-'
+          print(f'PDF verified: {p.stat().st_size:,} bytes')
+          PY
+
+      - name: Package deliverables
+        run: |
+          cd output
+          zip -r ../AES_NC_Bank_Map_Deliverables.zip .
+
+      - name: Upload deliverables
+        uses: actions/upload-artifact@v4
+        with:
+          name: AES-NC-bank-map-deliverables
+          path: |
+            output/AES_NC_Stores_Nearby_Banks_Detailed_Map.pdf
+            output/AES_NC_Stores_Nearby_Banks_1.5mi.csv
+            output/map_data.json
+            AES_NC_Bank_Map_Deliverables.zip
+          if-no-files-found: error
+          retention-days: 7
