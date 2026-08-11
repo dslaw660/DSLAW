@@ -1,0 +1,5 @@
+matplotlib==3.10.5
+numpy==2.3.2
+Pillow==11.3.0
+reportlab==4.4.3
+requests==2.32.4
