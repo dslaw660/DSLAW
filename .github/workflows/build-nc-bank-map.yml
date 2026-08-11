@@ -31,7 +31,7 @@ jobs:
       - name: Build detailed PDF map book with TIGERweb streets
         env:
           OUTPUT_DIR: output
-        run: python tools/build_with_tiger_vector.py
+        run: python tools/build_with_tiger_vector_fixed.py
 
       - name: Verify PDF and street-map images
         run: |
